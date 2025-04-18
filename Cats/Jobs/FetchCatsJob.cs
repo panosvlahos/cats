@@ -1,5 +1,6 @@
 ﻿using Entities.Models;
 using Interfaces.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 public class FetchCatsJob
 {
@@ -14,29 +15,73 @@ public class FetchCatsJob
 
     public async Task ExecuteAsync()
     {
-        var cats = await _catFetcherService.FetchCatsAsync();
-
-        foreach (var cat in cats)
+        try
         {
-            if (_context.Cats.Any(c => c.CatId == cat.Id))
-                continue;
+            var cats = await _catFetcherService.FetchCatsAsync();
 
-            //var imageBytes = await _catFetcherService.DownloadImageAsync(cat.Url);
+            var existingCatIds = new HashSet<string>(
+                await _context.Cat.Select(c => c.CatId).ToListAsync()
+            );
 
-            //var entity = new Cats
-            //{
-            //    CatId = cat.Id,
-            //    Width = cat.Width,
-            //    Height = cat.Height,
-            //    Image = imageBytes
-            //};
+            // 🔒 Cache of tags already seen or created in this run
+            var tagCache = new Dictionary<string, Tag>(StringComparer.OrdinalIgnoreCase);
 
-            // parse and save tags, if any
-            // entity.CatTags = ...
+            // Preload tags from DB
+            foreach (var tag in await _context.Tag.ToListAsync())
+            {
+                tagCache[tag.Name] = tag;
+            }
 
-           // _context.Cats.Add(entity);
+            foreach (var cat in cats)
+            {
+                if (existingCatIds.Contains(cat.Id) ||
+                    _context.ChangeTracker.Entries<Cat>().Any(e => e.Entity.CatId == cat.Id))
+                    continue;
+
+                try
+                {
+                    var imageBytes = await _catFetcherService.DownloadImageAsync(cat.Url);
+
+                    var dbCat = new Cat
+                    {
+                        CatId = cat.Id,
+                        Width = cat.Width,
+                        Height = cat.Height,
+                        Image = imageBytes
+                    };
+
+                    var tags = (cat.Breeds ?? new List<BreedDto>())
+                        .Where(b => !string.IsNullOrWhiteSpace(b.Temperament))
+                        .SelectMany(b => b.Temperament.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                        .Select(t => t.Trim())
+                        .Distinct();
+
+                    foreach (var tagName in tags)
+                    {
+                        if (!tagCache.TryGetValue(tagName, out var tag))
+                        {
+                            tag = new Tag { Name = tagName };
+                            tagCache[tagName] = tag;
+                        }
+
+                        dbCat.Tags.Add(tag);
+                    }
+
+                    _context.Cat.Add(dbCat);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error processing cat {cat.Id}: {ex.Message}");
+                }
+            }
+
+            await _context.SaveChangesAsync();
         }
-
-        //await _context.SaveChangesAsync();
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching cats: {ex.Message}");
+        }
     }
+
+
 }

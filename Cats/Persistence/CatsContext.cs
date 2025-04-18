@@ -13,10 +13,28 @@ public partial class CatsContext : DbContext
     {
     }
 
-    public virtual DbSet<Cats> Cats { get; set; }
+    public virtual DbSet<Cat> Cat { get; set; }
 
-    public virtual DbSet<Tags> Tags { get; set; }
+    public virtual DbSet<Tag> Tag { get; set; }
 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Cat>().HasKey(c => c.Id);
+        modelBuilder.Entity<Tag>().HasKey(t => t.Id);
+
+        modelBuilder.Entity<Cat>().HasIndex(c => c.CatId).IsUnique();
+        modelBuilder.Entity<Tag>().HasIndex(t => t.Name).IsUnique();
+
+        modelBuilder.Entity<Cat>()
+    .HasMany(c => c.Tags)
+    .WithMany(t => t.Cats)
+    .UsingEntity<Dictionary<string, object>>(
+        "CatTags",
+        j => j.HasOne<Tag>().WithMany().HasForeignKey("TagId"),
+        j => j.HasOne<Cat>().WithMany().HasForeignKey("CatId"),
+        j => j.HasKey("CatId", "TagId"));
+
+    }
     //protected override void OnModelCreating(ModelBuilder modelBuilder)
     //{
     //    modelBuilder.Entity<Cats>(entity =>
@@ -58,8 +76,8 @@ public partial class CatsContext : DbContext
     //            .HasMaxLength(100);
     //    });
 
-        //OnModelCreatingPartial(modelBuilder);
-   // }
+    //OnModelCreatingPartial(modelBuilder);
+    // }
 
     //partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

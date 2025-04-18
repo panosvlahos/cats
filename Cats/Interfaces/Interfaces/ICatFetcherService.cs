@@ -3,6 +3,6 @@
     public interface ICatFetcherService
     {
         Task<List<CatDto>> FetchCatsAsync(int count = 25);
-        //Task<byte[]> DownloadImageAsync(string imageUrl);
+        Task<byte[]> DownloadImageAsync(string imageUrl);
     }
 }

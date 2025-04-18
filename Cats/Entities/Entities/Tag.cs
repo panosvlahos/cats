@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Entities.Models;
 
-public partial class Tags
+public partial class Tag
 {
     public int Id { get; set; }
 
@@ -13,5 +13,5 @@ public partial class Tags
 
     public DateTime Created { get; set; }
 
-    public virtual ICollection<Cats> CatEntity { get; set; } = new List<Cats>();
+    public virtual ICollection<Cat> Cats { get; set; } = new List<Cat>();
 }

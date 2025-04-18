@@ -15,5 +15,12 @@ namespace Cats.Controllers
             var jobId = BackgroundJob.Enqueue<FetchCatsJob>(job => job.ExecuteAsync());
             return Ok(new { jobId });
         }
+
+        //[HttpGet("Get")]
+        //public IActionResult Fetch()
+        //{
+        //    var jobId = BackgroundJob.Enqueue<FetchCatsJob>(job => job.ExecuteAsync());
+        //    return Ok(new { jobId });
+        //}
     }
 }
