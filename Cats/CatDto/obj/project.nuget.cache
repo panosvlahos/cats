@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "573yh5FgPPk=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\panos\\git\\Natech\\Cats\\CatDto\\CatDto.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\panos\\.nuget\\packages\\microsoft.net.sdk.compilers.toolset\\9.0.201\\microsoft.net.sdk.compilers.toolset.9.0.201.nupkg.sha512"
+  ],
+  "logs": []
+}

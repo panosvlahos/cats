@@ -1,0 +1,12 @@
+C:\Users\panos\git\Natech\Cats\CatDto\bin\Debug\net8.0\CatDto.deps.json
+C:\Users\panos\git\Natech\Cats\CatDto\bin\Debug\net8.0\CatDto.dll
+C:\Users\panos\git\Natech\Cats\CatDto\bin\Debug\net8.0\CatDto.pdb
+C:\Users\panos\git\Natech\Cats\CatDto\obj\Debug\net8.0\CatDto.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\panos\git\Natech\Cats\CatDto\obj\Debug\net8.0\CatDto.AssemblyInfoInputs.cache
+C:\Users\panos\git\Natech\Cats\CatDto\obj\Debug\net8.0\CatDto.AssemblyInfo.cs
+C:\Users\panos\git\Natech\Cats\CatDto\obj\Debug\net8.0\CatDto.csproj.CoreCompileInputs.cache
+C:\Users\panos\git\Natech\Cats\CatDto\obj\Debug\net8.0\CatDto.sourcelink.json
+C:\Users\panos\git\Natech\Cats\CatDto\obj\Debug\net8.0\CatDto.dll
+C:\Users\panos\git\Natech\Cats\CatDto\obj\Debug\net8.0\refint\CatDto.dll
+C:\Users\panos\git\Natech\Cats\CatDto\obj\Debug\net8.0\CatDto.pdb
+C:\Users\panos\git\Natech\Cats\CatDto\obj\Debug\net8.0\ref\CatDto.dll

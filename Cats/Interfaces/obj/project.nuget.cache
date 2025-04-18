@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "xMQm2R+cNO4=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\panos\\git\\Natech\\Cats\\Interfaces\\Interfaces.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\panos\\.nuget\\packages\\microsoft.net.sdk.compilers.toolset\\9.0.201\\microsoft.net.sdk.compilers.toolset.9.0.201.nupkg.sha512"
+  ],
+  "logs": []
+}
