@@ -2,8 +2,9 @@ using Entities.Models;
 using Hangfire;
 using Interfaces.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Repositories.Repositories;
 using Services.Services;
-
+using UnitOfWorks.UnitOfWorks;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -27,6 +28,9 @@ builder.Services.AddHangfireServer(); // This starts the Hangfire job server
 // Optional: register job client
 //builder.Services.AddScoped<IBackgroundJobClient, BackgroundJobClient>();
 builder.Services.AddScoped<ICatFetcherService, CatApiService>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<ICatRepository, CatRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<FetchCatsJob>();
 var app = builder.Build();
 

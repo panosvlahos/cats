@@ -1,87 +1,103 @@
-﻿using Entities.Models;
-using Interfaces.Interfaces;
-using Microsoft.EntityFrameworkCore;
+﻿using Interfaces.Interfaces;
+using Entities.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-public class FetchCatsJob
+namespace Services.Services
 {
-    private readonly ICatFetcherService _catFetcherService;
-    private readonly CatsContext _context;
-
-    public FetchCatsJob(ICatFetcherService catFetcherService, CatsContext context)
+    public class FetchCatsJob
     {
-        _catFetcherService = catFetcherService;
-        _context = context;
-    }
+        private readonly ICatFetcherService _catFetcherService;
+        private readonly IUnitOfWork _unitOfWork;
 
-    public async Task ExecuteAsync()
-    {
-        try
+        public FetchCatsJob(ICatFetcherService catFetcherService, IUnitOfWork unitOfWork)
         {
-            var cats = await _catFetcherService.FetchCatsAsync();
+            _catFetcherService = catFetcherService;
+            _unitOfWork = unitOfWork;
+        }
 
-            var existingCatIds = new HashSet<string>(
-                await _context.Cat.Select(c => c.CatId).ToListAsync()
-            );
-
-            // 🔒 Cache of tags already seen or created in this run
-            var tagCache = new Dictionary<string, Tag>(StringComparer.OrdinalIgnoreCase);
-
-            // Preload tags from DB
-            foreach (var tag in await _context.Tag.ToListAsync())
+        public async Task ExecuteAsync()
+        {
+            try
             {
-                tagCache[tag.Name] = tag;
-            }
+                // Fetch the list of cats from the external API
+                var cats = await _catFetcherService.FetchCatsAsync();
+                
+                // Fetch existing cat IDs from the database to prevent duplicates
+                var existingCatIds = new HashSet<string>(await _unitOfWork.CatRepository.GetExistingCatIdsAsync());
 
-            foreach (var cat in cats)
-            {
-                if (existingCatIds.Contains(cat.Id) ||
-                    _context.ChangeTracker.Entries<Cat>().Any(e => e.Entity.CatId == cat.Id))
-                    continue;
-
-                try
+                // Create a cache for tags to prevent duplicate tag creation
+                var tagCache = new Dictionary<string, Tag>(StringComparer.OrdinalIgnoreCase);
+                
+                // Preload tags from DB into the cache
+                var existingTags = await _unitOfWork.TagRepository.GetAllTagsAsync();
+                foreach (var tag in existingTags)
                 {
-                    var imageBytes = await _catFetcherService.DownloadImageAsync(cat.Url);
+                    tagCache[tag.Name] = tag;
+                }
 
-                    var dbCat = new Cat
+                foreach (var cat in cats)
+                {
+                    if (existingCatIds.Contains(cat.Id))
+                        continue; // Skip if the cat already exists
+
+                    try
                     {
-                        CatId = cat.Id,
-                        Width = cat.Width,
-                        Height = cat.Height,
-                        Image = imageBytes
-                    };
+                        // Download the cat image
+                        var imageBytes = await _catFetcherService.DownloadImageAsync(cat.Url);
 
-                    var tags = (cat.Breeds ?? new List<BreedDto>())
-                        .Where(b => !string.IsNullOrWhiteSpace(b.Temperament))
-                        .SelectMany(b => b.Temperament.Split(',', StringSplitOptions.RemoveEmptyEntries))
-                        .Select(t => t.Trim())
-                        .Distinct();
-
-                    foreach (var tagName in tags)
-                    {
-                        if (!tagCache.TryGetValue(tagName, out var tag))
+                        // Create a new cat entity to be added to the database
+                        var dbCat = new Cat
                         {
-                            tag = new Tag { Name = tagName };
-                            tagCache[tagName] = tag;
+                            CatId = cat.Id,
+                            Width = cat.Width,
+                            Height = cat.Height,
+                            Image = imageBytes
+                        };
+
+                        // Process tags and associate with the new cat
+                        var tags = (cat.Breeds ?? new List<BreedDto>())
+                            .Where(b => !string.IsNullOrWhiteSpace(b.Temperament))
+                            .SelectMany(b => b.Temperament.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                            .Select(t => t.Trim())
+                            .Distinct();
+
+                        foreach (var tagName in tags)
+                        {
+                            Tag tag;
+
+                            // Check if the tag is already in the cache
+                            if (!tagCache.TryGetValue(tagName, out tag))
+                            {
+                                // Create a new tag if it doesn't exist in the cache
+                                tag = new Tag { Name = tagName };
+                                await _unitOfWork.TagRepository.AddTagAsync(tag);
+                                tagCache[tagName] = tag; // Cache the new tag
+                            }
+
+                            // Associate the tag with the cat
+                            dbCat.Tags.Add(tag);
                         }
 
-                        dbCat.Tags.Add(tag);
+                        // Add the new cat to the repository
+                        await _unitOfWork.CatRepository.AddCatAsync(dbCat);
                     }
+                    catch (Exception ex)
+                    {
+                        // Log error for this specific cat
+                        Console.WriteLine($"Error processing cat {cat.Id}: {ex.Message}");
+                    }
+                }
 
-                    _context.Cat.Add(dbCat);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error processing cat {cat.Id}: {ex.Message}");
-                }
+                // Save all changes (cats and tags) in one transaction
+                await _unitOfWork.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error fetching cats: {ex.Message}");
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching cats: {ex.Message}");
+            }
         }
     }
-
-
 }

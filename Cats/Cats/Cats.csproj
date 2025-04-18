@@ -17,6 +17,8 @@
   <ItemGroup>
     <ProjectReference Include="..\CatApiService\Services.csproj" />
     <ProjectReference Include="..\Jobs\Jobs.csproj" />
+    <ProjectReference Include="..\Repositories\Repositories.csproj" />
+    <ProjectReference Include="..\UnitOfWorks\UnitOfWorks.csproj" />
   </ItemGroup>
 
 </Project>
