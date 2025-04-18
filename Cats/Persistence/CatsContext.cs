@@ -3,8 +3,8 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-
-namespace Entities.Models;
+using Entities.Models;
+namespace Persistence.Context;
 
 public partial class CatsContext : DbContext
 {

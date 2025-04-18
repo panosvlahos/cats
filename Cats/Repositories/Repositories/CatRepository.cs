@@ -1,6 +1,7 @@
 ﻿using Entities.Models;
 using Interfaces.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Persistence.Context;
 
 namespace Repositories.Repositories
 {

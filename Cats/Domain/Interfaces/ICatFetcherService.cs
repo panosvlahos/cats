@@ -1,4 +1,6 @@
-﻿namespace Interfaces.Interfaces
+﻿using Contracts;
+
+namespace Interfaces.Interfaces
 {
     public interface ICatFetcherService
     {

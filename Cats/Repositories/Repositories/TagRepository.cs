@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Persistence.Context;
 namespace Repositories.Repositories
 {
     public class TagRepository : ITagRepository

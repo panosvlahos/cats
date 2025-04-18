@@ -1,4 +1,5 @@
-﻿using Interfaces.Interfaces;
+﻿using Contracts;
+using Interfaces.Interfaces;
 using Newtonsoft.Json;
 
 namespace Services.Services

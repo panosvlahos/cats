@@ -15,10 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CatApiService\Services.csproj" />
-    <ProjectReference Include="..\Jobs\Jobs.csproj" />
-    <ProjectReference Include="..\Repositories\Repositories.csproj" />
-    <ProjectReference Include="..\UnitOfWorks\UnitOfWorks.csproj" />
+    <ProjectReference Include="..\Application\Application.csproj" />
+    <ProjectReference Include="..\Domain\Domain.csproj" />
+    <ProjectReference Include="..\Persistence\Persistence.csproj" />
+    <ProjectReference Include="..\Repositories\Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
