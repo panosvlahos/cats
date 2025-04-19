@@ -3,7 +3,7 @@ using Interfaces.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
 
-namespace Repositories.Repositories
+namespace Infrastructure.Repositories
 {
     public class CatRepository : ICatRepository
     {
@@ -27,6 +27,41 @@ namespace Repositories.Repositories
         public async Task SaveAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<Cat?> GetCatByIdAsync(string id)
+        {
+            return await _context.Cat
+                .Include(c => c.Tags)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.CatId == id);
+        }
+
+        public async Task<List<Cat>> GetCatsByTagAsync(string? tag, int page, int pageSize)
+        {
+            var query = _context.Cat.Include(c => c.Tags).AsQueryable();
+
+            if (!string.IsNullOrEmpty(tag))
+            {
+                query = query.Where(c => c.Tags.Any(t => t.Name == tag));
+            }
+
+            return await query
+                .OrderByDescending(c => c.Id)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public async Task<List<Cat>> GetCatsAsync(int page, int pageSize)
+        {
+            var query = _context.Cat.Include(c => c.Tags).AsQueryable();
+
+            return await query
+                .OrderByDescending(c => c.Created)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .AsNoTracking()
+                .ToListAsync();
         }
     }
 }

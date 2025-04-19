@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Persistence.Context;
-namespace Repositories.Repositories
+namespace Infrastructure.Repositories
 {
     public class TagRepository : ITagRepository
     {

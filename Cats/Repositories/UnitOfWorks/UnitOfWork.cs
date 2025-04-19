@@ -1,7 +1,7 @@
 ﻿using Entities.Models;
+using Infrastructure.Repositories;
 using Interfaces.Interfaces;
 using Persistence.Context;
-using Repositories.Repositories;
 
 namespace UnitOfWorks.UnitOfWorks
 {

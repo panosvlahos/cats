@@ -4,9 +4,9 @@ using Interfaces.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Services.Services;
 using Persistence.Context;
-using Repositories.Repositories;
 using UnitOfWorks.UnitOfWorks;
 using Mappings;
+using Infrastructure.Repositories;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
