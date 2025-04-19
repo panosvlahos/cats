@@ -7,6 +7,7 @@ using Persistence.Context;
 using UnitOfWorks.UnitOfWorks;
 using Mappings;
 using Infrastructure.Repositories;
+using Application.Commands;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -29,6 +30,8 @@ builder.Services.AddHangfireServer(); // This starts the Hangfire job server
 
 // Optional: register job client
 //builder.Services.AddScoped<IBackgroundJobClient, BackgroundJobClient>();
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(FetchCatsCommand).Assembly));
 builder.Services.AddAutoMapper(typeof(Mapper).Assembly);
 builder.Services.AddScoped<ICatFetcherService, CatApiService>();
 builder.Services.AddScoped<ITagRepository, TagRepository>();

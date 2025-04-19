@@ -37,7 +37,7 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync(c => c.CatId == id);
         }
 
-        public async Task<List<Cat>> GetCatsByTagAsync(string? tag, int page, int pageSize)
+        public async Task<List<Cat>> GetCatsByTagAsync(string? tag)
         {
             var query = _context.Cat.Include(c => c.Tags).AsQueryable();
 
