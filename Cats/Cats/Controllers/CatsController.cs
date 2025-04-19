@@ -1,4 +1,8 @@
 using Application.Commands;
+using Application.Queries;
+using Application.Queries.GetCatById;
+using Application.Queries.GetCatsByTag;
+using Application.Queries.GetCatsPaged;
 using Hangfire;
 using Interfaces.Interfaces;
 using MediatR;
@@ -27,42 +31,32 @@ namespace Cats.Controllers
             return Ok(new { jobId });
         }
 
-        // POST /api/cats/fetch
-        //[HttpPost("fetch")]
-        //public IActionResult Fetch()
-        //{
-        //    var jobId = Hangfire.BackgroundJob.Enqueue<FetchCatsJob>(job => job.ExecuteAsync());
-        //    return Ok(new { jobId });
-        //}
-
-        // GET /api/cats/{id}
+        
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCatById(string id)
         {
-            var cat = await _unitOfWork.CatRepository.GetCatByIdAsync(id);
+            var cat = await _mediator.Send(new GetCatByIdQuery(id));
             if (cat == null)
                 return NotFound();
 
             return Ok(cat);
         }
 
-        // GET /api/cats?page=1&pageSize=10
-        // GET /api/cats?tag=playful&page=1&pageSize=10
+        
         [HttpGet("by-tag")]
         public async Task<IActionResult> GetCatsByTag([FromQuery] string? tag)
         {
-            
-
-            var cats = await _unitOfWork.CatRepository.GetCatsByTagAsync(tag);
+            var cats = await _mediator.Send(new GetCatsByTagQuery(tag));
             return Ok(cats);
         }
 
         [HttpGet]
         public async Task<IActionResult> GetCats([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            if (page < 1 || pageSize < 1) return BadRequest("Page and PageSize must be greater than 0.");
+            if (page < 1 || pageSize < 1)
+                return BadRequest("Page and PageSize must be greater than 0.");
 
-            var cats = await _unitOfWork.CatRepository.GetCatsAsync(page, pageSize);
+            var cats = await _mediator.Send(new GetCatsQuery(page, pageSize));
             return Ok(cats);
         }
     }

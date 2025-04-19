@@ -1,5 +1,7 @@
 ﻿using Contracts;
+using Infrastructure.Configuration;
 using Interfaces.Interfaces;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace Services.Services
@@ -7,24 +9,27 @@ namespace Services.Services
     public class CatApiService : ICatFetcherService
     {
         private readonly HttpClient _httpClient;
-
-        public CatApiService(HttpClient httpClient)
+        private readonly TheCatApiOptions _apiOptions;
+        private readonly TheCatApiOptions _options;
+        public CatApiService(HttpClient httpClient, IOptions<TheCatApiOptions> options)
         {
             _httpClient = httpClient;
+            _options = options.Value;
         }
 
         public async Task<List<CatDto>> FetchCatsAsync(int count = 25)
         {
             try
             {
-                var url = $"https://api.thecatapi.com/v1/images/search?limit={count}";
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{_options.BaseUrl}/images/search?limit=25&has_breeds=1");
 
-                // Add API key to the request headers
-                _httpClient.DefaultRequestHeaders.Add("x-api-key", "live_Oh0Ch2hH9WBHu3EMiZvBRBMfsqoVHcfH8wpjH4jKg3YtiVhIlOiyxzboN9DcDlx7");
+                // Add API key header here
+                request.Headers.Add("x-api-key", _options.ApiKey);
 
-                var response = await _httpClient.GetStringAsync(url);
-
-                var cats = JsonConvert.DeserializeObject<List<CatDto>>(response);
+                var response = await _httpClient.SendAsync(request);
+                var content = await response.Content.ReadAsStringAsync();
+                
+                var cats = JsonConvert.DeserializeObject<List<CatDto>>(content);
                 return cats!;
             }
             catch (Exception ex)

@@ -8,6 +8,7 @@ using UnitOfWorks.UnitOfWorks;
 using Mappings;
 using Infrastructure.Repositories;
 using Application.Commands;
+using Infrastructure.Configuration;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -16,6 +17,10 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+
+builder.Services.Configure<TheCatApiOptions>(
+    builder.Configuration.GetSection("TheCatApi"));
 
 builder.Services.AddHttpClient();
 builder.Services.AddDbContext<CatsContext>(options =>

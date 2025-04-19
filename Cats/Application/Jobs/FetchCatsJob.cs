@@ -72,7 +72,7 @@ namespace Services.Services
                             }
 
                             // Associate the tag with the cat
-                            dbCat.Tags.Add(tag);
+                            dbCat.Tags.Add(tagCache[tag.Name]);
                         }
 
                         // Add the new cat to the repository
