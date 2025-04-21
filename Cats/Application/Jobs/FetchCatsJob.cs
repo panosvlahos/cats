@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
 using Interfaces.Interfaces;
 using Entities.Models;
+using Contracts;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Contracts;
 
 namespace Services.Services
 {
@@ -26,66 +27,67 @@ namespace Services.Services
         {
             try
             {
-                // Fetch the list of cats from the external API
-                var cats = await _catFetcherService.FetchCatsAsync();
+                var existingCatIds = new HashSet<string>(
+                    await _unitOfWork.CatRepository.GetExistingCatIdsAsync());
 
-                // Fetch existing cat IDs from the database to prevent duplicates
-                var existingCatIds = new HashSet<string>(await _unitOfWork.CatRepository.GetExistingCatIdsAsync());
-
-                // Create a cache for tags to prevent duplicate tag creation
-                var tagCache = new Dictionary<string, Tag>(StringComparer.OrdinalIgnoreCase);
-
-                // Preload tags from DB into the cache
+                var tagCache = new ConcurrentDictionary<string, Tag>(StringComparer.OrdinalIgnoreCase);
                 var existingTags = await _unitOfWork.TagRepository.GetAllTagsAsync();
+
                 foreach (var tag in existingTags)
                 {
                     tagCache[tag.Name] = tag;
                 }
 
-                foreach (var cat in cats)
-                {
-                    if (existingCatIds.Contains(cat.Id))
-                        continue; // Skip if the cat already exists
+                var cats = await _catFetcherService.FetchCatsAsync();
+                if (cats == null || cats.Count == 0) return;
 
-                    try
+                var newCats = new ConcurrentBag<Cat>();
+                var newTags = new ConcurrentDictionary<string, Tag>();
+
+                var tasks = cats
+                    .Where(c => !existingCatIds.Contains(c.Id))
+                    .Select(async catDto =>
                     {
-                        // Download the cat image
-                        var imageBytes = await _catFetcherService.DownloadImageAsync(cat.Url);
-
-                        // Use AutoMapper to map CatDto to Cat entity
-                        var dbCat = _mapper.Map<Cat>(cat);
-                        dbCat.Image = imageBytes;
-
-                        // Process tags and associate with the new cat using AutoMapper for breeds
-                        var tags = _mapper.Map<List<Tag>>(cat.Breeds ?? new List<BreedDto>());
-
-                        foreach (var tag in tags)
+                        try
                         {
-                            Tag tagFromCache;
+                            var imageBytes = await _catFetcherService.DownloadImageAsync(catDto.Url);
 
-                            // Check if the tag is already in the cache
-                            if (!tagCache.TryGetValue(tag.Name, out tagFromCache))
+                            var dbCat = _mapper.Map<Cat>(catDto);
+                            dbCat.Image = imageBytes;
+                            dbCat.Tags = new List<Tag>();
+
+                            if (catDto.Breeds is { Count: > 0 })
                             {
-                                // Add new tag if not found in cache
-                                await _unitOfWork.TagRepository.AddTagAsync(tag);
-                                tagCache[tag.Name] = tag; // Cache the new tag
+                                var tags = _mapper.Map<List<Tag>>(catDto.Breeds);
+
+                                foreach (var tag in tags)
+                                {
+                                    var cachedTag = tagCache.GetOrAdd(tag.Name, name =>
+                                    {
+                                        newTags[name] = tag;
+                                        return tag;
+                                    });
+
+                                    dbCat.Tags.Add(cachedTag);
+                                }
                             }
 
-                            // Associate the tag with the cat
-                            dbCat.Tags.Add(tagCache[tag.Name]);
+                            newCats.Add(dbCat);
                         }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error processing cat {catDto.Id}: {ex.Message}");
+                        }
+                    });
 
-                        // Add the new cat to the repository
-                        await _unitOfWork.CatRepository.AddCatAsync(dbCat);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Log error for this specific cat
-                        Console.WriteLine($"Error processing cat {cat.Id}: {ex.Message}");
-                    }
-                }
+                await Task.WhenAll(tasks);
 
-                // Save all changes (cats and tags) in one transaction
+                if (newTags.Count > 0)
+                    await _unitOfWork.TagRepository.AddTagAsync(newTags.Values.ToList());
+
+                if (newCats.Count > 0)
+                    await _unitOfWork.CatRepository.AddCatAsync(newCats.ToList());
+
                 await _unitOfWork.SaveChangesAsync();
             }
             catch (Exception ex)

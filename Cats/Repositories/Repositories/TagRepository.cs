@@ -23,9 +23,9 @@ namespace Infrastructure.Repositories
             return await _context.Tag.ToListAsync();
         }
 
-        public async Task AddTagAsync(Tag tag)
+        public async Task AddTagAsync(List<Tag> tags)
         {
-            await _context.Tag.AddAsync(tag);
+            await _context.Tag.AddRangeAsync(tags);
         }
 
         public async Task SaveAsync()

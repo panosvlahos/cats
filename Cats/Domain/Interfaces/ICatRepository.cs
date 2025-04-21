@@ -10,7 +10,7 @@ namespace Interfaces.Interfaces
     public interface ICatRepository
     {
         Task<List<string>> GetExistingCatIdsAsync();
-        Task AddCatAsync(Cat cat);
+        Task AddCatAsync(List<Cat> cats);
         Task SaveAsync();
 
         Task<Cat?> GetCatByIdAsync(string id);

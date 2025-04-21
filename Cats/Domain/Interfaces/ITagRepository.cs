@@ -10,7 +10,7 @@ namespace Interfaces.Interfaces
     public interface ITagRepository
     {
         Task<List<Tag>> GetAllTagsAsync();
-        Task AddTagAsync(Tag tag);
+        Task AddTagAsync(List<Tag> tags);
         Task SaveAsync();
 
     }

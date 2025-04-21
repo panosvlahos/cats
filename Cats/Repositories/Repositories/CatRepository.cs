@@ -19,9 +19,9 @@ namespace Infrastructure.Repositories
             return await _context.Cat.Select(c => c.CatId).ToListAsync();
         }
 
-        public async Task AddCatAsync(Cat cat)
+        public async Task AddCatAsync(List<Cat> cats)
         {
-            await _context.Cat.AddAsync(cat);
+            await _context.Cat.AddRangeAsync(cats);
         }
 
         public async Task SaveAsync()
