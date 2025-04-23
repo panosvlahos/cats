@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Contracts;
 using Entities.Models;
+using FluentValidation;
 using Interfaces.Interfaces;
 using MediatR;
 using System;
@@ -15,14 +16,20 @@ namespace Application.Queries.GetCatsByTag
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        public GetCatsByTagHandler(IUnitOfWork unitOfWork, IMapper mapper)
+        private readonly IValidator<GetCatsByTagQuery> _validator;
+        public GetCatsByTagHandler(IUnitOfWork unitOfWork, IMapper mapper, IValidator<GetCatsByTagQuery> validator)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _validator = validator;
         }
 
         public async Task<List<CatDto>> Handle(GetCatsByTagQuery request, CancellationToken cancellationToken)
         {
+            var validationResult = await _validator.ValidateAsync(request, cancellationToken);
+            if (!validationResult.IsValid)
+                throw new ValidationException(validationResult.Errors);
+
             var cat = await _unitOfWork.CatRepository.GetCatsByTagAsync(request.Tag);
 
             if (cat == null)

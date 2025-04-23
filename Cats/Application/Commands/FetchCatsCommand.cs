@@ -8,5 +8,7 @@ using System.Threading.Tasks;
 
 namespace Application.Commands
 {
-    public class FetchCatsCommand : IRequest<string> { }
+    public class FetchCatsCommand : IRequest<string> {
+        public int Count { get; set; }
+    }
 }

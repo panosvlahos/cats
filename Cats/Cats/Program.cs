@@ -9,6 +9,10 @@ using Mappings;
 using Infrastructure.Repositories;
 using Application.Commands;
 using Infrastructure.Configuration;
+using MediatR;
+using Application.Queries.GetCatsPaged;
+using FluentValidation;
+using Application.Queries.GetCatsByTag;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -43,6 +47,12 @@ builder.Services.AddScoped<ITagRepository, TagRepository>();
 builder.Services.AddScoped<ICatRepository, CatRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<FetchCatsJob>();
+
+builder.Services.AddValidatorsFromAssemblyContaining<GetCatsQueryValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<GetCatsByTagQueryValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<FetchCatsCommandValidator>();
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
